@@ -4,7 +4,7 @@ from PIL import Image
 import google.generativeai as genai
 
 # Configure the API key directly in the script
-API_KEY = 'YOUR KEY'
+API_KEY = "YOUR_GEMINI_API_KEY"
 genai.configure(api_key=API_KEY)
 
 # Generation configuration
@@ -26,9 +26,6 @@ safety_settings = [
 
 # Model name
 MODEL_NAME = "gemini-1.5-pro-latest"
-
-# Framework selection (e.g., Tailwind, Bootstrap, etc.)
-framework = "Regular CSS use flex grid etc"  # Change this to "Bootstrap" or any other framework as needed
 
 # Create the model
 model = genai.GenerativeModel(
@@ -54,6 +51,9 @@ def main():
     st.title("Gemini 1.5 Pro, UI to Code 👨‍💻 ")
     st.subheader('Made with ❤️ by [Skirano](https://x.com/skirano)')
 
+    # Dropdown to select code generation type (HTML or Flutter)
+    code_type = st.selectbox("Choose code type to generate", ["HTML", "Flutter"])
+
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
     if uploaded_file is not None:
@@ -70,40 +70,66 @@ def main():
             temp_image_path = pathlib.Path("temp_image.jpg")
             image.save(temp_image_path, format="JPEG")
 
-            # Generate UI description
-            if st.button("Code UI"):
-                st.write("🧑‍💻 Looking at your UI...")
-                prompt = "Describe this UI in accurate details. When you reference a UI element put its name and bounding box in the format: [object name (y_min, x_min, y_max, x_max)]. Also Describe the color of the elements."
+            # Generate code based on the selected type
+            if st.button(f"Generate {code_type} code"):
+                st.write(f"🧑‍💻 Looking at your UI for {code_type}...")
+
+                # Generate description of the UI
+                prompt = "Describe this UI in accurate details. When you reference a UI element put its name and bounding box in the format: [object name (y_min, x_min, y_max, x_max)]. Also describe the color and positioning of the elements."
                 description = send_message_to_model(prompt, temp_image_path)
                 st.write(description)
 
                 # Refine the description
                 st.write("🔍 Refining description with visual comparison...")
-                refine_prompt = f"Compare the described UI elements with the provided image and identify any missing elements or inaccuracies. Also Describe the color of the elements. Provide a refined and accurate description of the UI elements based on this comparison. Here is the initial description: {description}"
+                refine_prompt = f"Compare the described UI elements with the provided image and identify any missing elements or inaccuracies. Describe the color of the elements. Provide a refined and accurate description of the UI elements based on this comparison. Here is the initial description: {description}"
                 refined_description = send_message_to_model(refine_prompt, temp_image_path)
                 st.write(refined_description)
 
-                # Generate HTML
-                st.write("🛠️ Generating website...")
-                html_prompt = f"Create an HTML file based on the following UI description, using the UI elements described in the previous response. Include {framework} CSS within the HTML file to style the elements. Make sure the colors used are the same as the original UI. The UI needs to be responsive and mobile-first, matching the original UI as closely as possible. Do not include any explanations or comments. Avoid using ```html. and ``` at the end. ONLY return the HTML code with inline CSS. Here is the refined description: {refined_description}"
-                initial_html = send_message_to_model(html_prompt, temp_image_path)
-                st.code(initial_html, language='html')
+                if code_type == "Flutter":
+                    # Generate Flutter UI code
+                    st.write("🛠️ Generating Flutter UI code...")
+                    flutter_prompt = f"Create a Flutter code based on the following UI description, including proper layout widgets (e.g., `Container`, `Row`, `Column`, etc.) with appropriate padding, alignment, and positioning. Use `BoxDecoration` for styling and colors to match the original UI. Ensure the code is responsive and mobile-first. Here is the refined description: {refined_description}"
+                    initial_flutter_code = send_message_to_model(flutter_prompt, temp_image_path)
+                    st.code(initial_flutter_code, language='dart')
 
-                # Refine HTML
-                st.write("🔧 Refining website...")
-                refine_html_prompt = f"Validate the following HTML code based on the UI description and image and provide a refined version of the HTML code with {framework} CSS that improves accuracy, responsiveness, and adherence to the original design. ONLY return the refined HTML code with inline CSS. Avoid using ```html. and ``` at the end. Here is the initial HTML: {initial_html}"
-                refined_html = send_message_to_model(refine_html_prompt, temp_image_path)
-                st.code(refined_html, language='html')
+                    # Refine Flutter UI code
+                    st.write("🔧 Refining Flutter UI code...")
+                    refine_flutter_prompt = f"Validate the following Flutter code based on the UI description and image and provide a refined version of the code that improves accuracy, responsiveness, and adherence to the original design. Here is the initial Flutter code: {initial_flutter_code}"
+                    refined_flutter_code = send_message_to_model(refine_flutter_prompt, temp_image_path)
+                    st.code(refined_flutter_code, language='dart')
 
-                # Save the refined HTML to a file
-                with open("index.html", "w") as file:
-                    file.write(refined_html)
-                st.success("HTML file 'index.html' has been created.")
+                    # Save the refined Flutter code to a file
+                    with open("flutter_ui.dart", "w") as file:
+                        file.write(refined_flutter_code)
+                    st.success("Flutter UI file 'flutter_ui.dart' has been created.")
 
-                # Provide download link for HTML
-                st.download_button(label="Download HTML", data=refined_html, file_name="index.html", mime="text/html")
+                    # Provide download link for Flutter code
+                    st.download_button(label="Download Flutter UI Code", data=refined_flutter_code, file_name="flutter_ui.dart", mime="application/dart")
+
+                else:
+                    # Generate HTML code
+                    st.write("🛠️ Generating HTML code...")
+                    html_prompt = f"Create an HTML file based on the following UI description, using flexbox and grid layout with inline CSS. Ensure the colors and layout match the original UI. Here is the refined description: {refined_description}"
+                    initial_html_code = send_message_to_model(html_prompt, temp_image_path)
+                    st.code(initial_html_code, language='html')
+
+                    # Refine HTML code
+                    st.write("🔧 Refining HTML code...")
+                    refine_html_prompt = f"Validate the following HTML code based on the UI description and image and provide a refined version of the code that improves accuracy, responsiveness, and adherence to the original design. Here is the initial HTML code: {initial_html_code}"
+                    refined_html_code = send_message_to_model(refine_html_prompt, temp_image_path)
+                    st.code(refined_html_code, language='html')
+
+                    # Save the refined HTML code to a file
+                    with open("index.html", "w") as file:
+                        file.write(refined_html_code)
+                    st.success("HTML file 'index.html' has been created.")
+
+                    # Provide download link for HTML code
+                    st.download_button(label="Download HTML Code", data=refined_html_code, file_name="index.html", mime="text/html")
+
         except Exception as e:
             st.error(f"An error occurred: {e}")
+
 
 if __name__ == "__main__":
     main()
