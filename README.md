@@ -25,7 +25,7 @@ This Streamlit app is designed to convert UI designs into code using the power o
 
 2. 修改變數
     - 修改對話金鑰
-        搜尋 API_KEY 並更換為自己的 Gemini [FREE] API Key
+        - 搜尋 API_KEY 並更換為自己的 Gemini [FREE] API Key
 
 ### MAC
 1. 安裝環境
@@ -44,7 +44,7 @@ This Streamlit app is designed to convert UI designs into code using the power o
 
 2. 修改變數
     - 修改對話金鑰
-        搜尋 API_KEY 並更換為自己的 Gemini [FREE] API Key
+        - 搜尋 API_KEY 並更換為自己的 Gemini [FREE] API Key
 
 ## 執行方式
 
